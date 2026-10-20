@@ -1,0 +1,21 @@
+# OS junk
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.DS_Store
+*.lnk
+
+# editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# python
+__pycache__/
+*.py[cod]
+
+# local scratch
+_frames/
+_qa/
+*.mp4
+*.log

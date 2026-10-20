@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07100f" />
+  <meta name="description" content="深圳大运中心体育场的实时三维建筑模型：六边形晶体折面、单层折面空间网格屋盖、三层看台、400 米田径场与 LED 大屏，可切换时间、灯光、视角并翻阅结构图纸。" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2307100f'/%3E%3Cpath d='M32 6 56 20v24L32 58 8 44V20z' fill='none' stroke='%23dce9e3' stroke-width='1.4'/%3E%3Cpath d='M32 6v52M8 20l48 24M56 20 8 44M8 32h48M20 14l24 36M44 14 20 50' fill='none' stroke='%2356d9a4' stroke-width='.8' opacity='.8'/%3E%3C/svg%3E" />
+  <title>水晶石 · 深圳大运中心体育场 | 实时建筑模型</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app" id="app">
+    <canvas id="scene" aria-label="深圳大运中心体育场实时三维模型"></canvas>
+    <div class="scene-wash" aria-hidden="true"></div>
+    <div class="scene-grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="深圳大运中心体育场首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <path d="M24 3.5 44.5 15v18L24 44.5 3.5 33V15z" stroke="currentColor" stroke-width=".9"/>
+            <path d="M24 3.5v41M3.5 15l41 18M44.5 15l-41 18M3.5 24h41M13 9l22 30M35 9 13 39" stroke="currentColor" stroke-width=".55" opacity=".55"/>
+            <path d="m24 11 10.5 6v12L24 35l-10.5-6V17z" stroke="currentColor" stroke-width=".9" opacity=".9"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-cn">水晶石</span>
+          <span class="brand-en">SHENZHEN UNIVERSIADE SPORTS CENTER</span>
+        </span>
+      </a>
+
+      <div class="topbar-meta" aria-hidden="true">
+        <span class="signal-dot"></span>
+        <span>LONG GANG / SHENZHEN</span>
+        <span class="meta-slash">/</span>
+        <span>22.61°N 114.25°E</span>
+      </div>
+
+      <nav class="top-actions" aria-label="页面功能">
+        <button class="top-action" type="button" data-archive="drawings">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3h14v14H3zM3 8h14M8 3v14M12.5 8v9" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
+          <span>图纸档案</span>
+        </button>
+        <button class="top-action" type="button" data-archive="data">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16V9m4 7V4m4 12v-5m4 5V7" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+          <span>建筑数据</span>
+        </button>
+        <button class="top-action" type="button" data-archive="sources">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.2 12.8l5.6-5.6M6.3 9.9l-2 2a3 3 0 104.2 4.2l2-2M13.7 10.1l2-2a3 3 0 10-4.2-4.2l-2 2" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          <span>来源</span>
+        </button>
+        <button class="icon-button" id="fullscreenButton" type="button" aria-label="切换全屏" title="全屏">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4" fill="none" stroke="currentColor" stroke-width="1.15"/></svg>
+        </button>
+      </nav>
+    </header>
+
+    <aside class="hero" aria-label="项目题记">
+      <p class="hero-kicker"><span>2011 / 深圳</span><span>ARCHIVE 01</span></p>
+      <h1>
+        <span class="hero-cn">水晶石</span>
+        <span class="hero-en">THE<br />CRYSTAL</span>
+      </h1>
+      <p class="hero-lede">
+        20 组向外生长的折面单元围合出一颗发光晶体。<br />结构不再藏在表皮之后，它就是建筑本身。
+      </p>
+      <div class="hero-metrics" aria-label="建筑关键数据">
+        <div><strong>60,000</strong><span>座席 / SEATS</span></div>
+        <div><strong>290 × 271</strong><span>米 / FOOTPRINT</span></div>
+        <div><strong>51.3</strong><span>米 / HEIGHT</span></div>
+      </div>
+      <div class="hero-actions">
+        <button class="primary-button" type="button" data-view="field">
+          <span>进入内场</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.35"/></svg>
+        </button>
+        <button class="text-button" type="button" data-archive="drawings">
+          <span>翻阅结构图纸</span>
+          <span class="text-button-index">12</span>
+        </button>
+      </div>
+    </aside>
+
+    <aside class="atmosphere-panel" aria-label="时间与照明控制">
+      <div class="panel-head">
+        <span class="panel-kicker">ATMOSPHERE / 环境</span>
+        <div class="panel-head-end">
+          <span class="panel-index">A—01</span>
+          <button class="panel-collapse" id="panelCollapse" type="button" aria-expanded="true" aria-label="收起环境面板" title="收起 / 展开">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8l6 5 6-5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="time-readout">
+        <strong id="clock">19:12</strong>
+        <span id="timePhase">暮色</span>
+        <small id="sunNote">太阳高度 −8.4° · 东南风</small>
+      </div>
+      <div class="range-wrap">
+        <input class="time-range" id="timeRange" type="range" min="0" max="24" step="0.02" value="19.2" aria-label="一天中的时间" />
+        <div class="range-ticks" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+      </div>
+      <div class="preset-row" role="group" aria-label="时间预设">
+        <button type="button" data-hour="6.3">黎明</button>
+        <button type="button" data-hour="13.4">正午</button>
+        <button type="button" data-hour="17.55">黄昏</button>
+        <button type="button" data-hour="19.2" class="is-active">夜幕</button>
+      </div>
+
+      <div class="panel-rule"></div>
+
+      <div class="light-heading">
+        <span class="panel-kicker">LIGHT / 灯效</span>
+        <span id="lightModeName">冰晶白</span>
+      </div>
+      <div class="light-options" role="group" aria-label="建筑灯效">
+        <button type="button" class="light-option is-active" data-mode="crystal" style="--swatch:#ecf4ee" aria-label="冰晶白"><span class="swatch"></span><span>冰晶</span></button>
+        <button type="button" class="light-option" data-mode="emerald" style="--swatch:#56d9a4" aria-label="翡翠绿"><span class="swatch"></span><span>翡翠</span></button>
+        <button type="button" class="light-option" data-mode="ice" style="--swatch:#6fcfff" aria-label="大运蓝"><span class="swatch"></span><span>大运</span></button>
+        <button type="button" class="light-option" data-mode="gala" style="--swatch:linear-gradient(90deg,#ff9d55,#ef4f88,#7d6bff,#53e2c0)" aria-label="盛典"><span class="swatch"></span><span>盛典</span></button>
+      </div>
+      <p class="light-desc" id="lightDesc">以 4,000K 冷白洗亮半透明折面，回应“水晶石”的原始概念。</p>
+
+      <div class="switch-row switch-row--lights">
+        <div>
+          <span class="switch-title">外立面 / 顶棚关灯</span>
+          <small>熄灭洗墙光、折面与场地照明（O）</small>
+        </div>
+        <button class="switch" id="lightsOffButton" type="button" role="switch" aria-checked="false" aria-label="切换外立面与顶棚关灯">
+          <span></span>
+        </button>
+      </div>
+
+      <div class="switch-row switch-row--crowd">
+        <div>
+          <span class="switch-title">荧光棒星海</span>
+          <small>看台举起的荧光棒，全场同色并自动变色（V）</small>
+        </div>
+        <button class="switch" id="sticksButton" type="button" role="switch" aria-checked="false" aria-label="切换荧光棒星海">
+          <span></span>
+        </button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <span class="switch-title">观众闪光灯</span>
+          <small>看台上随机亮起的手机闪光（B）</small>
+        </div>
+        <button class="switch" id="flashButton" type="button" role="switch" aria-checked="false" aria-label="切换观众闪光灯">
+          <span></span>
+        </button>
+      </div>
+
+      <div class="panel-rule"></div>
+
+      <div class="switch-row">
+        <div>
+          <span class="switch-title">结构透视</span>
+          <small>褪去表皮，查看折面网格</small>
+        </div>
+        <button class="switch" id="structureButton" type="button" role="switch" aria-checked="false" aria-label="切换结构透视">
+          <span></span>
+        </button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <span class="switch-title">自动环绕</span>
+          <small>以建筑中心缓慢旋转</small>
+        </div>
+        <button class="switch" id="autoRotateButton" type="button" role="switch" aria-checked="false" aria-label="切换自动环绕">
+          <span></span>
+        </button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <span class="switch-title">顶棚灯组</span>
+          <small>开口环上 100 盏投光灯的总开关（U）</small>
+        </div>
+        <button class="switch" id="lampBanksButton" type="button" role="switch" aria-checked="true" aria-label="切换顶棚灯组">
+          <span></span>
+        </button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <span class="switch-title">灯组频闪</span>
+          <small>所有灯组无序快闪（K）</small>
+        </div>
+        <button class="switch" id="strobeButton" type="button" role="switch" aria-checked="false" aria-label="切换灯组频闪">
+          <span></span>
+        </button>
+      </div>
+      <div class="switch-row">
+        <div>
+          <span class="switch-title">灯组逐个闪烁</span>
+          <small>100 盏灯各自独立随机快闪（G）</small>
+        </div>
+        <button class="switch" id="flickerButton" type="button" role="switch" aria-checked="false" aria-label="切换灯组逐个随机闪烁">
+          <span></span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="drawing-label" aria-hidden="true">
+      <span>1 : 1 REALTIME MODEL</span>
+      <span class="drawing-label-line"></span>
+      <span>52° 26′ 44″ N</span>
+    </div>
+
+    <section class="scene-caption" aria-live="polite">
+      <span class="caption-index" id="captionIndex">01</span>
+      <div>
+        <span class="caption-title" id="captionTitle">湖岸 · 从水面望向发光晶体</span>
+        <p id="captionText">20 组六边形晶体沿椭圆环向生长：每个单元以一枚外凸顶点为核，六条棱线向外放射，上部磨砂玻璃、下部暖灰石材。</p>
+      </div>
+    </section>
+
+    <div class="tier-picker" id="tierPicker" hidden role="group" aria-label="选择看台层">
+      <span class="tier-picker__kicker">STAND / 选择看台</span>
+      <button type="button" data-tier="1">
+        <strong>一层看台</strong>
+        <small>20 排 · 落到场边高度</small>
+      </button>
+      <button type="button" data-tier="2">
+        <strong>二层看台</strong>
+        <small>14 排 · 包厢层之上</small>
+      </button>
+      <button type="button" data-tier="3">
+        <strong>三层看台</strong>
+        <small>32 排 · 屋盖之下</small>
+      </button>
+      <span class="tier-picker__hint">按 1 / 2 / 3 选择 · ESC 关闭</span>
+    </div>
+
+    <nav class="view-dock" aria-label="视角与显示">
+      <button class="dock-button is-active" type="button" data-view="shore" data-index="01">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2.5 15.5c2 1.1 4 1.1 6 0s4-1.1 6 0 4 1.1 5 0M4 12 7 8l3 3 4-5 5 6M3 18.5h16" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>湖岸</span>
+      </button>
+      <button class="dock-button" type="button" data-view="orbit" data-index="02">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4 8.2 11 4l7 4.2v7.6L11 20l-7-4.2zM4 8.2l7 4.1 7-4.1M11 12.3V20" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>鸟瞰</span>
+      </button>
+      <button class="dock-button" type="button" data-view="elevation" data-index="03">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2.5 17 5 10.5h12L19.5 17M2.5 17h17M7.5 10.5 11 5l3.5 5.5M6 17v2m10-2v2" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>立面</span>
+      </button>
+      <button class="dock-button" type="button" data-view="field" data-index="04" title="内场 · 人物视角（WASD 移动、滚轮变焦）">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><ellipse cx="11" cy="11" rx="9" ry="5.4" fill="none" stroke="currentColor" stroke-width="1.05"/><path d="M2 11h18M11 5.6v10.8" stroke="currentColor" stroke-width=".8" opacity=".6"/></svg>
+        <span>内场</span>
+      </button>
+      <button class="dock-button" type="button" data-view="stands" data-index="05" title="看台 · 选择一层 / 二层 / 三层">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M3 17V8h4V6h4V4h4v13M3 17h16M8 17v-6h5v6" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>看台</span>
+      </button>
+      <button class="dock-button" type="button" data-view="roof" data-index="06">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="m11 3 8 4.4v7.2L11 19l-8-4.4V7.4zM3 7.4l8 4.4 8-4.4M11 11.8V19" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>屋盖</span>
+      </button>
+      <button class="dock-button" type="button" data-view="free" data-index="07" title="自由视角（WASD 平移、Space 上升、Shift 下降、滚轮变焦）">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2.4 11S5.9 5.6 11 5.6 19.6 11 19.6 11 16.1 16.4 11 16.4 2.4 11 2.4 11Z" fill="none" stroke="currentColor" stroke-width="1.05"/><circle cx="11" cy="11" r="2.3" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>自由</span>
+      </button>
+      <span class="dock-divider" aria-hidden="true"></span>
+      <button class="dock-button dock-icon-button" id="dockStructure" type="button" aria-pressed="false" title="结构透视（S）">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4 18 11 4l7 14M7 11h8M4 18h14" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>骨架</span>
+      </button>
+      <button class="dock-button dock-icon-button" id="dockRotate" type="button" aria-pressed="false" title="自动环绕（R）">
+        <svg viewBox="0 0 22 22" aria-hidden="true"><path d="M18 11a7 7 0 1 1-2.1-5M18 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.05"/></svg>
+        <span>环绕</span>
+      </button>
+    </nav>
+
+    <div class="bottom-meta" aria-hidden="true">
+      <span>PROGRAMMABLE / 20 FOLDED UNITS</span>
+      <span>60,000 SEATS · 18,000 t STEEL</span>
+      <span>MODEL 2026 / NOT FOR CONSTRUCTION</span>
+    </div>
+
+    <div class="walk-hud" id="walkHud" hidden>
+      <span class="walk-hud__kicker">FIRST PERSON / 人物视角</span>
+      <div class="walk-hud__row">
+        <strong id="walkAreaName">内场</strong>
+        <span class="walk-hud__hint" id="walkHint">
+          <span>W A S D 移动</span>
+          <span>鼠标 转向</span>
+          <span class="walk-hud__wheel">滚轮 变焦</span>
+          <span>Shift 加速</span>
+          <span>ESC 退出</span>
+        </span>
+      </div>
+      <div class="walk-hud__controls">
+        <div class="walk-hud__tiers" id="walkTiers" role="group" aria-label="切换看台层" hidden>
+          <button type="button" data-tier="1">一层</button>
+          <button type="button" data-tier="2">二层</button>
+          <button type="button" data-tier="3">三层</button>
+        </div>
+        <span class="walk-hud__zoom" id="walkZoom">视角 68°</span>
+      </div>
+      <button class="walk-hud__exit" id="walkExit" type="button">退出人物视角</button>
+    </div>
+    <div class="walk-reticle" id="walkReticle" aria-hidden="true"></div>
+
+    <div class="mouse-hint" id="mouseHint">
+      <span class="mouse-graphic" aria-hidden="true"><i></i></span>
+      <span><b>拖动</b> 旋转 · <b>滚轮</b> 缩放 · <b>右键</b> 平移</span>
+      <button type="button" id="dismissHint" aria-label="关闭操作提示">×</button>
+    </div>
+
+    <div class="archive" id="archive" hidden>
+      <div class="archive-backdrop" data-close-archive></div>
+      <section class="archive-sheet" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
+        <header class="archive-head">
+          <div class="archive-title-wrap">
+            <span class="panel-kicker">ARCHIVE / 深圳大运中心体育场</span>
+            <h2 id="archiveTitle">建筑档案</h2>
+          </div>
+          <nav class="archive-tabs" aria-label="档案分类">
+            <button type="button" data-tab="drawings">图纸 <span>12</span></button>
+            <button type="button" data-tab="data">数据</button>
+            <button type="button" data-tab="sources">来源</button>
+          </nav>
+          <button class="archive-close" type="button" data-close-archive aria-label="关闭档案">×</button>
+        </header>
+
+        <div class="archive-body">
+          <section class="archive-panel drawing-panel" data-panel="drawings">
+            <aside class="drawing-index">
+              <div class="drawing-index-head">
+                <span class="panel-kicker">USER DRAWINGS</span>
+                <p>用户提供的 12 张图纸与透视图。模型依据这些平面、剖面、立面与外凸折面关系建立。</p>
+              </div>
+              <div class="drawing-list" id="drawingList"></div>
+            </aside>
+            <div class="drawing-viewer">
+              <div class="drawing-stage" id="drawingStage">
+                <img id="drawingImage" src="" alt="" />
+                <button class="zoom-button" id="zoomButton" type="button" aria-label="放大图纸">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5" fill="none" stroke="currentColor"/><path d="m12.5 12.5 4 4M8.5 6v5M6 8.5h5" stroke="currentColor"/></svg>
+                </button>
+              </div>
+              <div class="drawing-info">
+                <div>
+                  <span class="panel-kicker" id="drawingCode">DWG 01</span>
+                  <h3 id="drawingName">主立面 · 峰谷展开</h3>
+                  <p id="drawingNote"></p>
+                </div>
+                <div class="drawing-specs">
+                  <span id="drawingSize">640 × 125</span>
+                  <span>用户图纸 / 非施工用途</span>
+                  <a id="drawingLink" href="#" download>下载图纸 <span>↗</span></a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="archive-panel data-panel" data-panel="data" hidden>
+            <div class="data-intro">
+              <div class="data-big">
+                <strong>60,000</strong>
+                <span>SEATS / 座席</span>
+              </div>
+              <div class="data-copy">
+                <p>深圳大运中心主体育场，是 2011 年第 26 届世界大学生夏季运动会的主会场。它用一套单层折面空间网格，把屋面、幕墙与结构压缩成同一层晶体般的表皮。</p>
+                <div class="data-tags"><span>gmp Architekten</span><span>sbp 结构</span><span>2011 竣工</span><span>双层通风表皮</span></div>
+              </div>
+            </div>
+            <div class="stats-grid" id="statsGrid"></div>
+            <div class="data-columns">
+              <section class="data-section">
+                <h3><span>01</span> 结构体系</h3>
+                <dl class="structure-list" id="structureList"></dl>
+              </section>
+              <section class="data-section">
+                <h3><span>02</span> 建筑色谱</h3>
+                <div class="palette-grid" id="paletteGrid"></div>
+                <p class="material-note" id="materialNote"></p>
+              </section>
+              <section class="data-section timeline-section">
+                <h3><span>03</span> 时间线</h3>
+                <ol class="timeline" id="timelineList"></ol>
+              </section>
+            </div>
+            <div class="data-footnote">
+              <span>数据口径</span>
+              <p>平面尺寸公开资料存在 290 × 271 m 与 270 × 285 m 两种写法，本页取 sbp 的 290 × 271 m；高度取钢结构最高点 51.3 m。模型为建筑可视化示意，不代替施工图、BIM 或结构计算。</p>
+            </div>
+          </section>
+
+          <section class="archive-panel sources-panel" data-panel="sources" hidden>
+            <div class="sources-intro">
+              <span class="panel-kicker">REFERENCES / 资料索引</span>
+              <h3>公开资料与图纸来源</h3>
+              <p>尺寸与结构描述来自建筑师、结构工程师及公开工程报道的交叉核对；建筑外观色彩参考建成照片与照明设计说明。所有三维几何均为本页程序化重建。</p>
+            </div>
+            <div class="source-list" id="sourceList"></div>
+            <div class="sources-note">
+              <div><span>模型精度</span><p>折面、杆件、看台与场地均为参数化示意，尺度关系遵循图纸与公开数据，不逐根复刻实际杆件截面。</p></div>
+              <div><span>图像版权</span><p>本页不转载外部建筑摄影。图纸档案展示用户提供的结构图，版权归原设计及建设单位所有。</p></div>
+            </div>
+          </section>
+        </div>
+        <footer class="archive-footer">
+          <span>SHENZHEN UNIVERSIADE SPORTS CENTER / 2011</span>
+          <span>MODEL &amp; INTERFACE — 2026</span>
+        </footer>
+      </section>
+    </div>
+
+    <div class="boot" id="boot">
+      <div class="boot-grid" aria-hidden="true"></div>
+      <div class="boot-inner">
+        <div class="boot-mark" aria-hidden="true">
+          <svg viewBox="0 0 96 96" fill="none">
+            <path d="M48 5 89 29v38L48 91 7 67V29z" stroke="currentColor" stroke-width=".8"/>
+            <path d="M48 5v86M7 29l82 38M89 29 7 67M7 48h82M26 17l44 62M70 17 26 79" stroke="currentColor" stroke-width=".5" opacity=".5"/>
+            <path d="m48 23 22 13v24L48 73 26 60V36z" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </div>
+        <p class="boot-kicker">SHENZHEN / 2011 UNIVERSIADE</p>
+        <h2>水晶石</h2>
+        <p class="boot-sub">深圳大运中心体育场 · 实时建筑模型</p>
+        <div class="boot-progress"><span id="bootBar"></span></div>
+        <div class="boot-meta"><span id="bootStatus">初始化晶体几何</span><span id="bootPercent">00%</span></div>
+      </div>
+    </div>
+
+    <div class="webgl-fallback" id="webglFallback" hidden>
+      <div>
+        <span class="panel-kicker">WEBGL REQUIRED</span>
+        <h2>无法启动三维视图</h2>
+        <p>请使用支持 WebGL 2 的现代浏览器，并确认硬件加速已开启。图纸与数据档案仍可通过上方按钮访问。</p>
+        <button type="button" id="fallbackOpen">打开图纸档案</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js",
+        "three/addons/": "./vendor/addons/"
+      }
+    }
+  </script>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
