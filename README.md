@@ -4,6 +4,8 @@
 
 > 截图未随仓库提供，克隆后本地打开即可查看全部视角、灯效与观众模式。
 
+**在线预览：<https://zhiyanzeng.github.io/universiade-stadium/>**
+
 ## 运行
 
 页面使用 ES Modules 与本地 Three.js，**必须通过 HTTP 访问**，不能直接双击 `index.html`：在 `file://` 协议下浏览器会以 CORS 为由拒绝加载模块，页面只会白屏。
